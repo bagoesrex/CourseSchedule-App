@@ -2,36 +2,59 @@ package com.dicoding.courseschedule.data
 
 import android.content.Context
 import androidx.lifecycle.LiveData
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
 import androidx.paging.PagingData
+import androidx.paging.liveData
+import androidx.sqlite.db.SupportSQLiteQuery
 import com.dicoding.courseschedule.util.QueryType
+import com.dicoding.courseschedule.util.QueryUtil
+import com.dicoding.courseschedule.util.QueryUtil.nearestQuery
 import com.dicoding.courseschedule.util.SortType
 import com.dicoding.courseschedule.util.executeThread
+import java.util.Calendar
+import java.util.GregorianCalendar
 
 //TODO 4 : Implement repository with appropriate dao
 class DataRepository(private val dao: CourseDao) {
 
     fun getNearestSchedule(queryType: QueryType) : LiveData<Course?> {
-        throw NotImplementedError("needs implementation")
+        val nearestQuery: SupportSQLiteQuery = nearestQuery(type = queryType)
+        return dao.getNearestSchedule(nearestQuery)
     }
 
     fun getAllCourse(sortType: SortType): LiveData<PagingData<Course>> {
-        throw NotImplementedError("needs implementation")
+        val sortTypeQuery = QueryUtil.sortedQuery(sortType)
+
+        return Pager(
+            config = PagingConfig(
+                pageSize = PAGE_SIZE,
+                enablePlaceholders = false,
+                initialLoadSize = PAGE_SIZE
+            ),
+            pagingSourceFactory = { dao.getAll(sortTypeQuery) }
+        ).liveData
     }
 
+
     fun getCourse(id: Int) : LiveData<Course> {
-        throw NotImplementedError("needs implementation")
+        return dao.getCourse(id)
     }
 
     fun getTodaySchedule() : List<Course> {
-        throw NotImplementedError("needs implementation")
+        var day = GregorianCalendar().get(Calendar.DAY_OF_WEEK) - 1
+        if (day == 0) {
+            day = 7
+        }
+        return dao.getTodaySchedule(day)
     }
 
     fun insert(course: Course) = executeThread {
-
+        dao.insert(course)
     }
 
     fun delete(course: Course) = executeThread {
-
+        dao.delete(course)
     }
 
     companion object {
