@@ -5,13 +5,13 @@ import androidx.lifecycle.LiveData
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
-import androidx.paging.liveData
 import androidx.sqlite.db.SupportSQLiteQuery
 import com.dicoding.courseschedule.util.QueryType
 import com.dicoding.courseschedule.util.QueryUtil
 import com.dicoding.courseschedule.util.QueryUtil.nearestQuery
 import com.dicoding.courseschedule.util.SortType
 import com.dicoding.courseschedule.util.executeThread
+import kotlinx.coroutines.flow.Flow
 import java.util.Calendar
 import java.util.GregorianCalendar
 
@@ -23,17 +23,15 @@ class DataRepository(private val dao: CourseDao) {
         return dao.getNearestSchedule(nearestQuery)
     }
 
-    fun getAllCourse(sortType: SortType): LiveData<PagingData<Course>> {
+    fun getAllCourse(sortType: SortType): Flow<PagingData<Course>> {
         val sortTypeQuery = QueryUtil.sortedQuery(sortType)
-
         return Pager(
             config = PagingConfig(
                 pageSize = PAGE_SIZE,
-                enablePlaceholders = false,
-                initialLoadSize = PAGE_SIZE
+                enablePlaceholders = false
             ),
             pagingSourceFactory = { dao.getAll(sortTypeQuery) }
-        ).liveData
+        ).flow
     }
 
 

@@ -5,11 +5,10 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
 import androidx.lifecycle.ViewModelProvider
-import androidx.paging.LoadState
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -17,8 +16,13 @@ import com.dicoding.courseschedule.R
 import com.dicoding.courseschedule.data.Course
 import com.dicoding.courseschedule.paging.CourseAdapter
 import com.dicoding.courseschedule.paging.CourseViewHolder
+import com.dicoding.courseschedule.ui.add.AddCourseActivity
+import com.dicoding.courseschedule.ui.detail.DetailActivity
 import com.dicoding.courseschedule.ui.setting.SettingsActivity
 import com.dicoding.courseschedule.util.SortType
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 class ListActivity : AppCompatActivity() {
 
@@ -51,6 +55,10 @@ class ListActivity : AppCompatActivity() {
 
     private fun onCourseClick(course: Course) {
         //TODO 8 : Intent and show detailed course
+        val intent = Intent(this, DetailActivity::class.java).apply {
+            putExtra(DetailActivity.COURSE_ID, course.id)
+        }
+        startActivity(intent)
     }
 
     private fun initAction() {
@@ -61,19 +69,18 @@ class ListActivity : AppCompatActivity() {
     }
 
     private fun updateList() {
-        viewModel.courses.observe(this) {
-            courseAdapter.submitData(lifecycle, it)
-            courseAdapter.addLoadStateListener { states ->
-                if (states.refresh is LoadState.NotLoading) {
-                    findViewById<TextView>(R.id.tv_empty_list).visibility =
-                        if (courseAdapter.itemCount == 0) View.VISIBLE else View.GONE
-                }
+        lifecycleScope.launch {
+            viewModel.courses.collectLatest { pagingData ->
+                courseAdapter.submitData(pagingData)
             }
         }
     }
 
     private fun setFabClick() {
         //TODO 9 : Create AddCourseActivity to set new course schedule
+        findViewById<FloatingActionButton>(R.id.fab).setOnClickListener {
+            startActivity(Intent(this, AddCourseActivity::class.java))
+        }
     }
 
     //TODO 14 : Fixing bug : sort menu not show and course not deleted when list is swiped
@@ -134,7 +141,6 @@ class ListActivity : AppCompatActivity() {
 
         override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
             val course = (viewHolder as CourseViewHolder).getCourse()
-
         }
     }
 }

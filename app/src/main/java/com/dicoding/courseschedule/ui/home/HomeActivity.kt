@@ -10,8 +10,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.dicoding.courseschedule.R
 import com.dicoding.courseschedule.data.Course
+import com.dicoding.courseschedule.ui.add.AddCourseActivity
 import com.dicoding.courseschedule.ui.list.ListActivity
-import com.dicoding.courseschedule.ui.list.ListViewModel
 import com.dicoding.courseschedule.ui.setting.SettingsActivity
 import com.dicoding.courseschedule.util.DayName
 import com.dicoding.courseschedule.util.QueryType
@@ -21,7 +21,7 @@ import com.dicoding.courseschedule.util.timeDifference
 class HomeActivity : AppCompatActivity() {
 
     private lateinit var viewModel: HomeViewModel
-    private var queryType = QueryType.CURRENT_DAY
+    private var queryType = QueryType.NEXT_DAY
 
     //TODO 5 : Show nearest schedule in CardHomeView and implement menu action
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,7 +30,7 @@ class HomeActivity : AppCompatActivity() {
         supportActionBar?.title = resources.getString(R.string.today_schedule)
 
         val factory = HomeViewModelFactory.createFactory(this)
-        viewModel = ViewModelProvider(this, factory).get(HomeViewModel::class.java)
+        viewModel = ViewModelProvider(this, factory)[HomeViewModel::class.java]
 
         viewModel.getNearestSchedule(queryType).observe(this) {
             showNearestSchedule(it)
@@ -46,9 +46,6 @@ class HomeActivity : AppCompatActivity() {
 
             val cardHome = findViewById<CardHomeView>(R.id.view_home)
 
-            findViewById<TextView>(R.id.tv_empty_home).visibility =
-                View.GONE
-
             cardHome.apply {
                 setCourseName(courseName)
                 setTime(time)
@@ -56,6 +53,9 @@ class HomeActivity : AppCompatActivity() {
                 setLecturer(lecturer)
                 setNote(note)
             }
+
+            findViewById<TextView>(R.id.tv_empty_home).visibility =
+                View.GONE
         }
 
         findViewById<TextView>(R.id.tv_empty_home).visibility =
@@ -81,6 +81,7 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val intent: Intent = when (item.itemId) {
+            R.id.action_add -> Intent(this, AddCourseActivity::class.java)
             R.id.action_list -> Intent(this, ListActivity::class.java)
             R.id.action_settings -> Intent(this, SettingsActivity::class.java)
             else -> null
